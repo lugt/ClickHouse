@@ -35,6 +35,10 @@ void registerStorageMySQL(StorageFactory & factory);
 void registerStorageKafka(StorageFactory & factory);
 #endif
 
+#if 1
+void registerStorageHDFS(StorageFactory & factory);
+#endif
+
 
 void registerStorages()
 {
@@ -67,6 +71,10 @@ void registerStorages()
     #if USE_RDKAFKA
     registerStorageKafka(factory);
     #endif
+
+#if 1
+    registerStorageHDFS(factory);
+#endif
 }
 
 }
