@@ -28,9 +28,6 @@
 # define O_CREAT	   0100	/* Not fcntl.  */
 # define O_APPEND	  02000
 
-int main(){
-    Hdfs::OutputStream * pps =  open_hdfs_write("/a.ccc","117.107.234.121",8020);
-}
 
 static Hdfs::OutputStream * open_hdfs_write(const char *file_path,const char *server, short unsigned int port){
     Hdfs::FileSystem *superfs;
@@ -47,4 +44,12 @@ static Hdfs::OutputStream * open_hdfs_write(const char *file_path,const char *se
     Hdfs::OutputStream * ous = new Hdfs::OutputStream();
     ous->open(*superfs, file_path, O_WRONLY | O_APPEND | O_CREAT, 0666, false, 0, 2048);
     return ous;
+}
+
+
+int main(){
+    Hdfs::OutputStream * pps =  open_hdfs_write("/a.ccc","117.107.234.121",8020);
+    pps->append("#Hello World!###",10);
+    pps->flush();
+    pps->close();
 }
