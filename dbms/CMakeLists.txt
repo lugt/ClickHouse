@@ -125,32 +125,6 @@ if (NOT ARCH_ARM)
     set (LINK_LIBRARIES_ONLY_ON_X86_64 cpuid)
 endif()
 
-
-find_package(Protobuf REQUIRED)
-find_package(OpenSSL REQUIRED)
-find_package(Threads)
-add_definitions(-DASIO_STANDALONE)
-
-include_directories(include)
-include_directories(lib)
-include_directories(${PROTOBUF_INCLUDE_DIRS})
-include_directories(${CMAKE_BINARY_DIR}/dbms/lib/proto)
-include_directories(third_party/asio-1.10.2/include)
-
-target_include_directories(clickhouse_common_io BEFORE PUBLIC ${ClickHouse_SOURCE_DIR}/dbms/include)
-target_include_directories(clickhouse_common_io BEFORE PUBLIC ${ClickHouse_SOURCE_DIR}/dbms/lib)
-target_include_directories(clickhouse_common_io BEFORE PUBLIC ${PROTOBUF_INCLUDE_DIRS})
-target_include_directories(clickhouse_common_io BEFORE PUBLIC ${CMAKE_BINARY_DIR}/dbms/lib/proto)
-target_include_directories(clickhouse_common_io BEFORE PUBLIC ${ClickHouse_SOURCE_DIR}/dbms/third_party/asio-1.10.2/include)
-
-target_include_directories(dbms BEFORE PUBLIC ${ClickHouse_SOURCE_DIR}/dbms/include)
-target_include_directories(dbms BEFORE PUBLIC ${ClickHouse_SOURCE_DIR}/dbms/lib)
-target_include_directories(dbms BEFORE PUBLIC ${PROTOBUF_INCLUDE_DIRS})
-target_include_directories(dbms BEFORE PUBLIC ${CMAKE_BINARY_DIR}/dbms/lib/proto)
-target_include_directories(dbms BEFORE PUBLIC ${ClickHouse_SOURCE_DIR}/dbms/third_party/asio-1.10.2/include)
-
-add_subdirectory(lib)
-
 target_link_libraries (clickhouse_common_io
     common
     string_utils
@@ -163,8 +137,10 @@ target_link_libraries (clickhouse_common_io
     ${ZLIB_LIBRARIES}
     ${EXECINFO_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
-    ${CMAKE_DL_LIBS} fs reader rpc common_hdfs proto ${PROTOBUF_LIBRARIES} ${OPENSSL_LIBRARIES}
+    ${CMAKE_DL_LIBS} ${PROTOBUF_LIBRARIES} ${OPENSSL_LIBRARIES}
 )
+
+#/*fs reader rpc common_hdfs proto
 
 target_link_libraries (dbms
     clickhouse_parsers
@@ -176,6 +152,25 @@ target_link_libraries (dbms
     ${OPENSSL_CRYPTO_LIBRARY}
     ${BTRIE_LIBRARIES}
 )
+
+SET(libhdfs3_ROOT_SOURCES_DIR ${ATTIC_DIR}/src)
+SET(libhdfs3_COMMON_SOURCES_DIR ${libhdfs3_ROOT_SOURCES_DIR}/common)
+set(STORAGE_HDFS_CONTAINER_ALL clickhouse_common_io dbms)
+foreach(STR_HDFS_TG IN LISTS STORAGE_HDFS_CONTAINER_ALL)
+
+    TARGET_LINK_LIBRARIES(${STR_HDFS_TG} libhdfs3-shared)
+
+    TARGET_INCLUDE_DIRECTORIES(${STR_HDFS_TG} PUBLIC ${libhdfs3_ROOT_SOURCES_DIR}
+            ${libhdfs3_COMMON_SOURCES_DIR}
+            ${libhdfs3_PLATFORM_HEADER_DIR}
+            ${libhdfs3_PLATFORM_HEADER_DIR}/src
+            ${ATTIC_DIR}/mock)
+
+    TARGET_COMPILE_DEFINITIONS(${STR_HDFS_TG} PUBLIC -DDATA_DIR="${TEST_WORKING_DIR}/")
+    TARGET_COMPILE_DEFINITIONS(${STR_HDFS_TG} PUBLIC -DHDFS_SUPERUSER="${HDFS_SUPERUSER}")
+    TARGET_COMPILE_DEFINITIONS(${STR_HDFS_TG} PUBLIC -DUSER="$ENV{USER}")
+
+endforeach()
 
 if (NOT USE_INTERNAL_RE2_LIBRARY)
     target_include_directories (dbms BEFORE PRIVATE ${RE2_INCLUDE_DIR})

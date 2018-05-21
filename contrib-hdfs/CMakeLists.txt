@@ -1,1 +1,24 @@
 add_subdirectory(attic)
+
+
+AUTO_SOURCES(hhdfs_files "*.cxx"  "${CMAKE_CURRENT_SOURCE_DIR}")
+LIST(APPEND hdfs_test_SOURCES ${hhdfs_files})
+SET(libhdfs3_ROOT_SOURCES_DIR ${ATTIC_DIR}/src)
+SET(libhdfs3_COMMON_SOURCES_DIR ${libhdfs3_ROOT_SOURCES_DIR}/common)
+add_executable(hdfs_test ${hdfs_test_SOURCES})
+set(STORAGE_HDFS_CONTAINER_ALL hdfs_test)
+foreach(STR_HDFS_TG IN LISTS STORAGE_HDFS_CONTAINER_ALL)
+
+    TARGET_LINK_LIBRARIES(${STR_HDFS_TG} libhdfs3-shared)
+
+    TARGET_INCLUDE_DIRECTORIES(${STR_HDFS_TG} PUBLIC ${libhdfs3_ROOT_SOURCES_DIR}
+            ${libhdfs3_COMMON_SOURCES_DIR}
+            ${libhdfs3_PLATFORM_HEADER_DIR}
+            ${libhdfs3_PLATFORM_HEADER_DIR}/src
+            ${ATTIC_DIR}/mock)
+
+    TARGET_COMPILE_DEFINITIONS(${STR_HDFS_TG} PUBLIC -DDATA_DIR="${TEST_WORKING_DIR}/")
+    TARGET_COMPILE_DEFINITIONS(${STR_HDFS_TG} PUBLIC -DHDFS_SUPERUSER="${HDFS_SUPERUSER}")
+    TARGET_COMPILE_DEFINITIONS(${STR_HDFS_TG} PUBLIC -DUSER="$ENV{USER}")
+
+endforeach()

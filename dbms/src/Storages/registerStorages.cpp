@@ -36,7 +36,7 @@ void registerStorageKafka(StorageFactory & factory);
 #endif
 
 #if 1
-void registerStorageHDFS(StorageFactory & factory);
+void registerStorageHDFSPlus(StorageFactory & factory);
 #endif
 
 
@@ -73,7 +73,7 @@ void registerStorages()
     #endif
 
 #if 1
-    registerStorageHDFS(factory);
+    registerStorageHDFSPlus(factory);
 #endif
 }
 

@@ -15,6 +15,12 @@
     M(WriteBufferFromFileDescriptorWrite) \
     M(WriteBufferFromFileDescriptorWriteFailed) \
     M(WriteBufferFromFileDescriptorWriteBytes) \
+    M(ReadBufferFromHDFSRead) \
+    M(ReadBufferFromHDFSReadFailed) \
+    M(ReadBufferFromHDFSReadBytes) \
+    M(WriteBufferFromHDFSWrite) \
+    M(WriteBufferFromHDFSWriteFailed) \
+    M(WriteBufferFromHDFSWriteBytes) \
     M(ReadBufferAIORead) \
     M(ReadBufferAIOReadBytes) \
     M(WriteBufferAIOWrite) \

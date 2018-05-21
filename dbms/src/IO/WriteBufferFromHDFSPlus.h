@@ -38,7 +38,7 @@ protected:
 public:
     WriteBufferFromHDFSPlus(
         Hdfs::OutputStream * osptr_ = nullptr,
-        String & fileName_, String & server_, unsigned short port_,
+        const char * fileName_ = "test", const char * server_ = "test", unsigned short port__ = 9000,
         size_t buf_size = DBMS_DEFAULT_BUFFER_SIZE,
         char * existing_memory = nullptr,
         size_t alignment = 0);
@@ -49,17 +49,16 @@ public:
 
     void sync() override;
 
+    int getFD() const override;
+
 private:
 
-    String fileName, server;
-
-    unsigned short port;
-
     off_t doSeek(off_t offset, int whence) override;
-
     void doTruncate(off_t length) override;
 
     Hdfs::OutputStream * osptr;
+    String fileName, server;
+    unsigned short port;
 
 };
 

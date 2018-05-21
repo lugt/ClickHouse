@@ -286,6 +286,11 @@ if (EXISTS ${CLICKHOUSE_PRIVATE_DIR})
     add_subdirectory (${CLICKHOUSE_PRIVATE_DIR})
 endif ()
 
+set(ATTIC_DIR ${ClickHouse_SOURCE_DIR}/contrib-hdfs/attic)
+SET(libhdfs3_PLATFORM_HEADER_DIR ${CMAKE_CURRENT_BINARY_DIR}/contrib-hdfs/attic/src)
+
+add_subdirectory(contrib-hdfs)
+
 add_subdirectory (contrib)
 add_subdirectory (libs)
 add_subdirectory (utils)

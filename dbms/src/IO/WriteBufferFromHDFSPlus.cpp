@@ -41,7 +41,7 @@ void WriteBufferFromHDFSPlus::nextImpl()
     size_t bytes_written = 0;
     while (bytes_written != offset())
     {
-        ProfileEvents::increment(ProfileEvents::WriteBufferFromFileDescriptorWrite);
+        ProfileEvents::increment(ProfileEvents::WriteBufferFromHDFSWrite);
 
         ssize_t res = 0;
         {
@@ -49,7 +49,7 @@ void WriteBufferFromHDFSPlus::nextImpl()
             try {
                 osptr->append(working_buffer.begin(), offset() - bytes_written);
             }catch (...){
-                ProfileEvents::increment(ProfileEvents::WriteBufferFromFileDescriptorWriteFailed);
+                ProfileEvents::increment(ProfileEvents::WriteBufferFromHDFSWriteFailed);
                 throwFromErrno("Cannot append(write) to HDFS " + getFileName(), ErrorCodes::CANNOT_WRITE_TO_FILE_DESCRIPTOR);
             }
             res = offset() - bytes_written;
@@ -58,7 +58,7 @@ void WriteBufferFromHDFSPlus::nextImpl()
 
         if ((-1 == res || 0 == res) && errno != EINTR)
         {
-            ProfileEvents::increment(ProfileEvents::WriteBufferFromFileDescriptorWriteFailed);
+            ProfileEvents::increment(ProfileEvents::WriteBufferFromHDFSWriteFailed);
             throwFromErrno("Cannot write(zero written) to HDFS " + getFileName(), ErrorCodes::CANNOT_WRITE_TO_FILE_DESCRIPTOR);
         }
 
@@ -66,7 +66,7 @@ void WriteBufferFromHDFSPlus::nextImpl()
             bytes_written += res;
     }
 
-    ProfileEvents::increment(ProfileEvents::WriteBufferFromFileDescriptorWriteBytes, bytes_written);
+    ProfileEvents::increment(ProfileEvents::WriteBufferFromHDFSWriteBytes, bytes_written);
 }
 
 
@@ -89,11 +89,13 @@ std::string WriteBufferFromHDFSPlus::getFileName() const
 
 WriteBufferFromHDFSPlus::WriteBufferFromHDFSPlus(
     Hdfs::OutputStream * osptr_,
-    String & fileName, String & server, unsigned short port,
+    const char * fileName_, const char * server_, unsigned short port__,
     size_t buf_size,
     char * existing_memory,
     size_t alignment)
-    : fileName(), WriteBufferFromFileBase(buf_size, existing_memory, alignment), osptr(osptr_) {}
+    : WriteBufferFromFileBase(buf_size, existing_memory, alignment), osptr(osptr_),
+    fileName(fileName_), server(server_), port(port__)
+{}
 
 
 WriteBufferFromHDFSPlus::~WriteBufferFromHDFSPlus()
@@ -113,6 +115,10 @@ WriteBufferFromHDFSPlus::~WriteBufferFromHDFSPlus()
 off_t WriteBufferFromHDFSPlus::getPositionInFile()
 {
     return osptr->tell();
+}
+
+int WriteBufferFromHDFSPlus::getFD() const{
+    return 0;
 }
 
 
@@ -155,6 +161,7 @@ off_t WriteBufferFromHDFSPlus::doSeek(off_t offset, int whence)
 
 void WriteBufferFromHDFSPlus::doTruncate(off_t length)
 {
+    static_cast<void>(length);
     osptr->flush();
     //int res = ftruncate(fd, length);
     //if (-1 == res)

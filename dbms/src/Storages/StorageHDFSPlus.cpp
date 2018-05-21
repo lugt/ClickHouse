@@ -38,17 +38,10 @@ namespace ErrorCodes
 };
 
 
-  static std::string getTablePath(const std::string & db_dir_path, const std::string & table_name, const std::string & format_name)
-  {
-      return db_dir_path + escapeForFileName(table_name) + "/data." + escapeForFileName(format_name);
-  }
-
-  static void checkCreationIsAllowed(Context & context_global)
-  {
-    static_cast<void>(context_global);
-    return;
-  }
-
+static std::string getTablePath(const std::string & db_dir_path, const std::string & table_name, const std::string & format_name)
+{
+  return db_dir_path + escapeForFileName(table_name) + "/data." + escapeForFileName(format_name);
+}
 
 static Hdfs::InputStream * open_hdfs_file(const char *file_path,const char *server, short unsigned int port);
 static Hdfs::OutputStream * open_hdfs_write(const char *file_path,const char *server, short unsigned int port);
@@ -66,7 +59,7 @@ StorageHDFSPlus::StorageHDFSPlus(
       server_addr(server_addr_), file_path(file_path_), server_port(server_port_),
       table_name(table_name_), format_name(format_name_), context_global(context_)
 {
-  
+
 }
 
 
@@ -146,10 +139,25 @@ public:
     explicit StorageHDFSPlusBlockOutputStream(StorageHDFSPlus & storage_)
         : storage(storage_), lock(storage.rwlock)
     {
-        Hdfs::OutputStream * osptr = open_hdfs_write(storage.file_path.c_str(), storage.server_addr.c_str(), storage.server_port);
-        write_buf = std::make_unique<WriteBufferFromHDFSPlus>(osptr, DBMS_DEFAULT_BUFFER_SIZE, O_WRONLY | O_APPEND | O_CREAT);
+        Hdfs::OutputStream * osptr = nullptr;
+        try {
+            osptr = open_hdfs_write(storage.file_path.c_str(),
+                                    storage.server_addr.c_str(),
+                                    storage.server_port);
+        }catch (...){
+            throw Exception("Error : HDFS Plus Writer Init failed : " + storage.file_path + ", "+
+                            storage.server_addr, ErrorCodes::CANNOT_WRITE_TO_FILE_DESCRIPTOR);
+        }
+
+        if(osptr == nullptr){
+            throw Exception("Error : HDFS Plus Writer NullPtr : " + storage.file_path + ", "+
+                            storage.server_addr, ErrorCodes::CANNOT_WRITE_TO_FILE_DESCRIPTOR);
+        }
+
+        write_buf = std::make_unique<WriteBufferFromHDFSPlus>(osptr,
+                storage.file_path.c_str(), storage.server_addr.c_str(), storage.server_port,
+                DBMS_DEFAULT_BUFFER_SIZE);
         writer = FormatFactory().getOutput(storage.format_name, *write_buf, storage.getSampleBlock(), storage.context_global);
-         throw Exception("Error : not implemented hdfs write", ErrorCodes::UNKNOWN_IDENTIFIER);
     }
 
     void write(const Block & block) override
@@ -177,7 +185,7 @@ public:
 private:
     StorageHDFSPlus & storage;
     std::unique_lock<std::shared_mutex> lock;
-    std::unique_ptr<WriteBufferHDFSPlus> write_buf;
+    std::unique_ptr<WriteBufferFromHDFSPlus> write_buf;
     BlockOutputStreamPtr writer;
 };
 
@@ -238,25 +246,35 @@ void registerStorageHDFSPlus(StorageFactory & factory)
     });
 }
 
-static int hdfs_initialize(){
-    return 0;
+static Hdfs::InputStream * open_hdfs_file(const char *file_path,const char *server, short unsigned int port){
+    Hdfs::FileSystem *superfs;
+    Hdfs::Config conf("function-test.xml");
+    conf.set("output.default.packetsize", 1024);
+    std::stringstream ss;
+    ss << "hdfs://"<<server << ":" <<port;
+    superfs = new Hdfs::FileSystem(conf);
+    superfs->connect(ss.str().c_str(), HDFS_SUPERUSER, NULL);
+    superfs->setWorkingDirectory(superfs->getWorkingDirectory().c_str());
+
+    Hdfs::InputStream * ins = new Hdfs::InputStream();
+    ins->open(*superfs, file_path, false);
+    return ins;
 }
 
-static InputStream * open_hdfs_file(const char *file_path,const char *server, short unsigned int port){
-    InputStream * isptr;
-    FileSystem * fs;
-    Config conf;
-    fs = new FileSystem(conf);
-    fs->connect();
-    isptr = fs->
-    return fs;
-}
+static Hdfs::OutputStream * open_hdfs_write(const char *file_path,const char *server, short unsigned int port){
+    Hdfs::FileSystem *superfs;
+    Hdfs::Config conf("function-test.xml");
+    conf.set("output.default.packetsize", 1024);
 
-static InputStream * open_hdfs_wrtie(const char *file_path,const char *server, short unsigned int port){
-    FileSystem * fs;
-    Config conf;
-    fs = new FileSystem(conf);
-    fs->connect();
-    ous.open(*fs, file_path, flag, 0644, false, 0, 2048)
-    return fs;
+    std::stringstream ss;
+    ss << "hdfs://"<<server << ":" <<port;
+
+    superfs = new Hdfs::FileSystem(conf);
+    superfs->connect(ss.str().c_str(), HDFS_SUPERUSER, NULL);
+    superfs->setWorkingDirectory(superfs->getWorkingDirectory().c_str());
+
+    Hdfs::OutputStream * ous = new Hdfs::OutputStream();
+    ous->open(*superfs, file_path, O_WRONLY | O_APPEND | O_CREAT, 0666, false, 0, 2048);
+    return ous;
+}
 }
