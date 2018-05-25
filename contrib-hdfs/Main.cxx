@@ -25,12 +25,18 @@
 #define O_RDONLY	     00
 #define O_WRONLY	     01
 #define O_RDWR		     02
-# define O_CREAT	   0100	/* Not fcntl.  */
-# define O_APPEND	  02000
+#define O_CREAT	        0100	/* Not fcntl.  */
+#define O_APPEND	    02000
 
 
 static Hdfs::OutputStream * open_hdfs_write(const char *file_path,const char *server, short unsigned int port){
     Hdfs::FileSystem *superfs;
+
+    std::string v = get_current_dir_name();
+    std::cout << v;
+
+    chdir("/home/nginx/ch/etc");
+
     Hdfs::Config conf("function-test.xml");
     conf.set("output.default.packetsize", 1024);
 

@@ -114,7 +114,7 @@ ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 TRY_COMPILE(STRERROR_R_RETURN_INT
 	${CMAKE_BINARY_DIR}
-	${CMAKE_SOURCE_DIR}/contrib-hdfs/attic/CMake/CMakeTestCompileStrerror.cpp
+	${ATTIC_DIR}/CMake/CMakeTestCompileStrerror.cpp
     CMAKE_FLAGS "-DCMAKE_CXX_LINK_EXECUTABLE='echo not linking now...'"
 	OUTPUT_VARIABLE OUTPUT)
 
@@ -128,13 +128,13 @@ ENDIF(STRERROR_R_RETURN_INT)
 
 TRY_COMPILE(HAVE_STEADY_CLOCK
 	${CMAKE_BINARY_DIR}
-	${CMAKE_SOURCE_DIR}/contrib-hdfs/attic/CMake/CMakeTestCompileSteadyClock.cpp
+	${ATTIC_DIR}/CMake/CMakeTestCompileSteadyClock.cpp
     CMAKE_FLAGS "-DCMAKE_CXX_LINK_EXECUTABLE='echo not linking now...'"
 	OUTPUT_VARIABLE OUTPUT)
 
 TRY_COMPILE(HAVE_NESTED_EXCEPTION
 	${CMAKE_BINARY_DIR}
-	${CMAKE_SOURCE_DIR}/contrib-hdfs/attic/CMake/CMakeTestCompileNestedException.cpp
+	${ATTIC_DIR}/CMake/CMakeTestCompileNestedException.cpp
     CMAKE_FLAGS "-DCMAKE_CXX_LINK_EXECUTABLE='echo not linking now...'"
 	OUTPUT_VARIABLE OUTPUT)
 
