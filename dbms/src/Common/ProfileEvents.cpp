@@ -85,6 +85,8 @@
     M(CompileAttempt) \
     M(CompileSuccess) \
     \
+    M(CompileFunction) \
+    \
     M(ExternalSortWritePart) \
     M(ExternalSortMerge) \
     M(ExternalAggregationWritePart) \
